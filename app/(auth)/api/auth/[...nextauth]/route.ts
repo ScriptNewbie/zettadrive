@@ -1,6 +1,6 @@
 import { database } from "@/app/db/database";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import NextAuth from "next-auth";
+import NextAuth, { Session, User } from "next-auth";
 import AuthentikProvider from "next-auth/providers/authentik";
 
 export const authOptions = {
@@ -12,6 +12,14 @@ export const authOptions = {
     }),
   ],
   adapter: PrismaAdapter(database),
+  callbacks: {
+    async session({ session, user }: { session: Session; user: User }) {
+      if (session.user) {
+        session.user.id = user.id;
+      }
+      return session;
+    },
+  },
 };
 
 const handler = NextAuth(authOptions);

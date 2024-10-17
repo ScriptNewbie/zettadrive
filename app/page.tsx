@@ -1,7 +1,11 @@
 import Image from "next/image";
 import styles from "./page.module.css";
+import Test from "./Test";
+import { getServerSession } from "next-auth";
+import { authOptions } from "./(auth)/api/auth/[...nextauth]/route";
 
-export default function Home() {
+export default async function Home() {
+  console.log(await getServerSession(authOptions));
   return (
     <div className={styles.page}>
       <main className={styles.main}>
@@ -90,6 +94,7 @@ export default function Home() {
           Go to nextjs.org →
         </a>
       </footer>
+      <Test />
     </div>
   );
 }

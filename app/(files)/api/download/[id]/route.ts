@@ -1,5 +1,7 @@
+import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/route";
 import { database } from "@/app/(db)/database";
 import { diskFileStore } from "@/app/(files)/fileStoreStrategies/diskFileStore";
+import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
 
@@ -7,8 +9,15 @@ export async function GET(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const file = await database.file.findFirst({ where: { id: params.id } });
-  if (!file) {
+  const session = await getServerSession(authOptions);
+
+  const file = await database.file.findFirst({
+    where: { id: params.id },
+  });
+
+  const canSeeFile = file?.userId === session?.user?.id;
+
+  if (!file || !canSeeFile) {
     return new NextResponse("File not found", { status: 404 });
   }
 

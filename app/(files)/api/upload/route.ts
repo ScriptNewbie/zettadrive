@@ -4,6 +4,8 @@ import { Readable } from "stream";
 import { diskFileStore } from "../../fileStoreStrategies/diskFileStore";
 import type { ReadableStream } from "node:stream/web";
 import { database } from "@/app/(db)/database";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/route";
 
 export const config = {
   api: {
@@ -12,6 +14,17 @@ export const config = {
 };
 
 export async function POST(req: NextRequest) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) {
+    return NextResponse.json(
+      {
+        status: "fail",
+        data: "User not authenticated",
+      },
+      { status: 401 }
+    );
+  }
+
   return new Promise((resolve, reject) => {
     const contentType = req.headers.get("content-type");
 
@@ -30,11 +43,16 @@ export async function POST(req: NextRequest) {
       "file",
       async (field: string, file: Readable, { filename, mimeType }) => {
         const { id } = await database.file.create({
-          data: { name: filename, type: mimeType, storeStrategy: "disk" },
+          data: {
+            name: filename,
+            type: mimeType,
+            storeStrategy: "disk",
+            userId: session.user.id,
+          },
         });
         const retrieveString = await diskFileStore.store(
           file,
-          "shared",
+          session.user.id,
           filename
         );
         await database.file.update({

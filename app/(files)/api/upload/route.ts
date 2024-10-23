@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import Busboy from "busboy";
 import { Readable } from "stream";
-import { diskFileStore } from "../../fileStoreStrategies/diskFileStore";
 import type { ReadableStream } from "node:stream/web";
 import { database } from "@/app/(db)/database";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/route";
+import { fileStore, fileStoreStrategy } from "../../fileStoreStrategies";
 
 export const config = {
   api: {
@@ -46,11 +46,11 @@ export async function POST(req: NextRequest) {
           data: {
             name: filename,
             type: mimeType,
-            storeStrategy: "disk",
+            storeStrategy: fileStoreStrategy,
             userId: session.user.id,
           },
         });
-        const retrieveString = await diskFileStore.store(
+        const retrieveString = await fileStore.store(
           file,
           session.user.id,
           filename

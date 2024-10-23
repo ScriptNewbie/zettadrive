@@ -1,6 +1,9 @@
 import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/route";
 import { database } from "@/app/(db)/database";
-import { diskFileStore } from "@/app/(files)/fileStoreStrategies/diskFileStore";
+import {
+  fileStoreStrategies,
+  fileStoreStrategyType,
+} from "@/app/(files)/fileStoreStrategies";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
@@ -27,10 +30,18 @@ export async function GET(
     });
   }
 
-  const fileStream = await diskFileStore.retrieve(file.retrieveString);
-  const responseStream = Readable.toWeb(fileStream);
-  const headers = new Headers({ type: file.type });
+  const fileStore =
+    fileStoreStrategies[file.storeStrategy as fileStoreStrategyType];
+  const { stream, length } = await fileStore.retrieve(file.retrieveString);
 
+  const responseStream = Readable.toWeb(stream);
+  const headers = new Headers({
+    "content-disposition": `attachment; filename="${file.name}"`,
+    "content-type": file.type,
+  });
+  if (length) {
+    headers.set("content-length", length.toString());
+  }
   return new NextResponse(responseStream as ReadableStream<Uint8Array>, {
     headers,
   });

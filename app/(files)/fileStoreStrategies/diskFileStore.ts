@@ -43,7 +43,7 @@ export const diskFileStore: FileStoreInterface = {
       });
 
       fileReadStream.on("open", () => {
-        resolve(fileReadStream);
+        resolve({ stream: fileReadStream, length: fs.statSync(filePath).size });
       });
     });
   },

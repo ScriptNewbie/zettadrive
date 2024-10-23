@@ -143,7 +143,6 @@ export const s3FileStore: FileStoreInterface = {
           const response = await s3Client.send(new GetObjectCommand(params));
 
           if (response.Body instanceof Readable) {
-            console.log("is readable");
             resolve({
               stream: response.Body,
               length: response.ContentLength || 0,

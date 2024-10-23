@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Busboy from "busboy";
 import { Readable } from "stream";
 import type { ReadableStream } from "node:stream/web";
-import { database } from "@/app/(db)/database";
+import { database } from "@/app/db/database";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/route";
 import { fileStore, fileStoreStrategy } from "../../fileStoreStrategies";

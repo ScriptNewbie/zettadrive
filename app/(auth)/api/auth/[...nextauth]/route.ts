@@ -1,4 +1,4 @@
-import { database } from "@/app/(db)/database";
+import { database } from "@/app/db/database";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import NextAuth, { Session, User } from "next-auth";
 import AuthentikProvider from "next-auth/providers/authentik";

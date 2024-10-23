@@ -4,16 +4,10 @@ import { Readable } from "stream";
 import type { ReadableStream } from "node:stream/web";
 import { database } from "@/app/db/database";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/authSetup";
 import { fileStore, fileStoreStrategy } from "../../fileStoreStrategies";
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest): Promise<Response> {
   const session = await getServerSession(authOptions);
   if (!session?.user) {
     return NextResponse.json(

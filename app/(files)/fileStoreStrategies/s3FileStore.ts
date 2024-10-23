@@ -157,7 +157,7 @@ export const s3FileStore: FileStoreInterface = {
           } else {
             reject(new Error("No data received from S3 getObject"));
           }
-        } catch (error) {
+        } catch (_) {
           reject(new Error("Error retrieving file from S3"));
         }
       }

@@ -30,7 +30,7 @@ export default function UploadPage() {
       if (res.ok) {
         alert(`Files uploaded successfully!`);
       }
-    } catch (error) {
+    } catch (_) {
       alert("Error uploading files");
     }
   };

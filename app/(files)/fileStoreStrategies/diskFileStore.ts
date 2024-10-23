@@ -1,5 +1,4 @@
 import { FileStoreInterface } from "./fileStoreInterface";
-import { writeFile } from "fs/promises";
 import * as fs from "fs";
 import path from "path";
 import { Readable } from "stream";

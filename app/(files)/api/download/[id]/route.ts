@@ -1,4 +1,4 @@
-import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/route";
+import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/authSetup";
 import { database } from "@/app/db/database";
 import {
   fileStoreStrategies,

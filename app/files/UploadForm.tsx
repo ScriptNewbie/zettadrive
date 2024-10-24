@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { Dropzone, FileWithPath } from "@mantine/dropzone";
 import { IconPhoto, IconUpload, IconX } from "@tabler/icons-react";
-import { Group, rem, Stack, Text } from "@mantine/core";
+import { Group, Loader, rem, Stack, Text } from "@mantine/core";
 
 export default function UploadPage() {
   const [files, setFiles] = useState<FileWithPath[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleDrop = (acceptedFiles: FileWithPath[]) => {
     setFiles(acceptedFiles);
@@ -14,6 +15,7 @@ export default function UploadPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsUploading(true);
 
     const formData = new FormData();
 
@@ -32,6 +34,8 @@ export default function UploadPage() {
       }
     } catch (_) {
       alert("Error uploading files");
+    } finally {
+      location.reload();
     }
   };
 
@@ -82,16 +86,19 @@ export default function UploadPage() {
 
             <div>
               <Text size="xl" inline>
-                Drag images here or click to select files
+                Drag files or click here or whatever
               </Text>
               <Text size="sm" c="dimmed" inline mt={7}>
-                Attach as many files as you like, each file should not exceed
-                5mb
+                Dropping new file will clear previously added as its not codded
+                yet as it should
               </Text>
             </div>
           </Group>
         </Dropzone>
-        <button type="submit">Upload</button>
+        {isUploading && <Loader />}
+        <button disabled={isUploading} type="submit">
+          Upload
+        </button>
       </form>
     </Stack>
   );

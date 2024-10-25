@@ -21,13 +21,16 @@ export async function GET(
   const canSeeFile = file?.userId === session?.user?.id;
 
   if (!file || !canSeeFile) {
-    return new NextResponse("File not found", { status: 404 });
+    return NextResponse.json({ message: "File not found" }, { status: 404 });
   }
 
   if (!file.retrieveString) {
-    return new NextResponse("Retrieve path for the file was not found", {
-      status: 404,
-    });
+    return NextResponse.json(
+      { message: "Retrieve path for the file was not found" },
+      {
+        status: 404,
+      }
+    );
   }
 
   const fileStore =

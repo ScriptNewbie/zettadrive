@@ -12,63 +12,73 @@ export async function POST(req: NextRequest): Promise<Response> {
   if (!session?.user) {
     return NextResponse.json(
       {
-        status: "fail",
-        data: "User not authenticated",
+        message: "User not authenticated",
       },
       { status: 401 }
     );
   }
 
-  return new Promise((resolve, reject) => {
-    const contentType = req.headers.get("content-type");
+  const contentType = req.headers.get("content-type");
+  if (!contentType) {
+    return NextResponse.json(
+      {
+        message: "No content type found",
+      },
+      { status: 400 }
+    );
+  }
 
-    if (!contentType) {
-      return reject(
-        NextResponse.json({
-          status: "fail",
-          data: "No content type found",
-        })
-      );
-    }
+  if (!req.body) {
+    return NextResponse.json({ message: "No file found" }, { status: 400 });
+  }
 
+  const filesBeingUploaded: Promise<void>[] = [];
+
+  return new Promise((resolve) => {
     const busboy = Busboy({ headers: { "content-type": contentType } });
-
     busboy.on(
       "file",
       async (field: string, file: Readable, { filename, mimeType }) => {
-        const { id } = await database.file.create({
-          data: {
-            name: filename,
-            type: mimeType,
-            storeStrategy: fileStoreStrategy,
-            userId: session.user.id,
-          },
-        });
-        const retrieveString = await fileStore.store(
-          file,
-          session.user.id,
-          filename
-        );
-        await database.file.update({
-          where: { id },
-          data: { retrieveString },
-        });
+        const storeFile = async () => {
+          const { id } = await database.file.create({
+            data: {
+              name: filename,
+              type: mimeType,
+              storeStrategy: fileStoreStrategy,
+              userId: session.user.id,
+            },
+          });
+          const retrieveString = await fileStore.store(
+            file,
+            session.user.id,
+            filename
+          );
+          await database.file.update({
+            where: { id },
+            data: { retrieveString },
+          });
+        };
+        filesBeingUploaded.push(storeFile());
       }
     );
 
-    busboy.on("finish", () => {
-      resolve(NextResponse.json({ status: "success" }));
+    busboy.on("finish", async () => {
+      try {
+        await Promise.all(filesBeingUploaded);
+        resolve(NextResponse.json({ message: "success" }));
+      } catch (_) {
+        resolve(
+          NextResponse.json(
+            { message: "Something went wrong" },
+            { status: 500 }
+          )
+        );
+      }
     });
 
     busboy.on("error", (err: Error) => {
-      reject(NextResponse.json({ status: "fail", data: err.message }));
+      resolve(NextResponse.json({ message: err.message }, { status: 500 }));
     });
-
-    if (!req.body) {
-      return reject(
-        NextResponse.json({ status: "fail", data: "No file found" })
-      );
-    }
 
     const nodeReq = Readable.fromWeb(req.body as ReadableStream<Uint8Array>);
     nodeReq.pipe(busboy);

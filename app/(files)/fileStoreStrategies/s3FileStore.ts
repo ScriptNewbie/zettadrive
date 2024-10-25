@@ -1,15 +1,10 @@
 import { FileStoreInterface } from "./fileStoreInterface"; // Adjust the import path as necessary
-import {
-  S3Client,
-  CreateMultipartUploadCommand,
-  UploadPartCommand,
-  CompleteMultipartUploadCommand,
-  AbortMultipartUploadCommand,
-  GetObjectCommand,
-} from "@aws-sdk/client-s3";
+import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 import { Readable } from "stream";
 
-const PART_SIZE = 5 * 1024 * 1024; // 5MB
+const PART_SIZE = 5 * 1024 * 1024;
+const QUEUE_SIZE = 4;
 
 const s3Client = new S3Client({
   region: process.env.S3_REGION,
@@ -24,108 +19,28 @@ const s3Client = new S3Client({
 export const s3FileStore: FileStoreInterface = {
   store: (fileStream: Readable, storeName: string, fileName: string) => {
     return new Promise<string>(async (resolve, reject) => {
-      let uploadId: string | undefined;
-      const bucketName = process.env.S3_BUCKET_NAME!;
-
       try {
-        const createMultipart = await s3Client.send(
-          new CreateMultipartUploadCommand({
-            Bucket: bucketName,
-            Key: `${storeName}/${fileName}`,
-          })
-        );
-        uploadId = createMultipart.UploadId!;
-        if (!uploadId) throw new Error("Failed to initiate multipart upload.");
+        const key = `${storeName}/${fileName}`;
 
-        const parts: { ETag: string; PartNumber: number }[] = [];
-        let partNumber = 1;
-        let buffer: Buffer[] = [];
-        let bufferLength = 0;
-
-        fileStream.on("data", async (chunk) => {
-          buffer.push(chunk);
-          bufferLength += chunk.length;
-
-          if (bufferLength >= PART_SIZE) {
-            fileStream.pause();
-
-            const partBuffer = Buffer.concat(buffer, bufferLength);
-            const uploadPart = await s3Client.send(
-              new UploadPartCommand({
-                Bucket: bucketName,
-                Key: `${storeName}/${fileName}`,
-                PartNumber: partNumber,
-                UploadId: uploadId,
-                Body: partBuffer,
-              })
-            );
-
-            parts.push({ ETag: uploadPart.ETag!, PartNumber: partNumber });
-            partNumber++;
-            buffer = [];
-            bufferLength = 0;
-
-            fileStream.resume();
-          }
+        const upload = new Upload({
+          client: s3Client,
+          params: {
+            Bucket: process.env.S3_BUCKET_NAME!,
+            Key: key,
+            Body: fileStream,
+          },
+          queueSize: QUEUE_SIZE,
+          partSize: PART_SIZE,
+          leavePartsOnError: false,
         });
 
-        fileStream.on("end", async () => {
-          if (buffer.length > 0) {
-            const partBuffer = Buffer.concat(buffer, bufferLength);
-            const uploadPart = await s3Client.send(
-              new UploadPartCommand({
-                Bucket: bucketName,
-                Key: `${storeName}/${fileName}`,
-                PartNumber: partNumber,
-                UploadId: uploadId,
-                Body: partBuffer,
-              })
-            );
+        // upload.on("httpUploadProgress", (progress) => {
+        //   console.log("Upload progress:", progress);
+        // });
 
-            parts.push({ ETag: uploadPart.ETag!, PartNumber: partNumber });
-          }
-
-          await s3Client.send(
-            new CompleteMultipartUploadCommand({
-              Bucket: bucketName,
-              Key: `${storeName}/${fileName}`,
-              UploadId: uploadId,
-              MultipartUpload: {
-                Parts: parts,
-              },
-            })
-          );
-
-          const retrieveString = `${storeName}/${fileName}`;
-          resolve(retrieveString);
-        });
-
-        fileStream.on("error", async (error) => {
-          console.error("Stream error:", error);
-          if (uploadId) {
-            // Abort multipart upload on error
-            await s3Client.send(
-              new AbortMultipartUploadCommand({
-                Bucket: bucketName,
-                Key: `${storeName}/${fileName}`,
-                UploadId: uploadId,
-              })
-            );
-          }
-          reject(new Error("Error uploading file to S3"));
-        });
+        await upload.done();
+        resolve(key);
       } catch (error) {
-        console.error("Error uploading file to S3:", error);
-        if (uploadId) {
-          // Abort multipart upload on error
-          await s3Client.send(
-            new AbortMultipartUploadCommand({
-              Bucket: process.env.S3_BUCKET_NAME!,
-              Key: `${storeName}/${fileName}`,
-              UploadId: uploadId,
-            })
-          );
-        }
         reject(new Error("Error uploading file to S3"));
       }
     });

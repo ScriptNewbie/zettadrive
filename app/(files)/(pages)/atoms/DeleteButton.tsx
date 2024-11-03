@@ -2,6 +2,7 @@
 import { Button } from "@mantine/core";
 import { useState } from "react";
 import { deleteFileAction } from "../../actions/deleteFile";
+import { unexpectedErrorMessage } from "@/app/shared/errorHandling/UnexpectedErrorResponse";
 
 export const DeleteButton = ({ fileId }: { fileId: string }) => {
   const [isPending, setIsPending] = useState(false);
@@ -20,7 +21,7 @@ export const DeleteButton = ({ fileId }: { fileId: string }) => {
             }
             location.reload();
           } catch (_) {
-            alert("An unexpected error occurred!");
+            alert(unexpectedErrorMessage);
           } finally {
             setIsPending(false);
           }

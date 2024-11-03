@@ -1,4 +1,5 @@
 import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/authSetup";
+import { UnexpectedErrorResponse } from "@/app/shared/errorHandling/UnexpectedErrorResponse";
 import Busboy from "busboy";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -49,12 +50,7 @@ export async function POST(req: NextRequest): Promise<Response> {
         await Promise.all(filesBeingUploaded);
         resolve(NextResponse.json({ message: "success" }));
       } catch (_) {
-        resolve(
-          NextResponse.json(
-            { message: "Something went wrong" },
-            { status: 500 }
-          )
-        );
+        resolve(UnexpectedErrorResponse());
       }
     });
 

@@ -1,9 +1,10 @@
+import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/authSetup";
+import { canDownloadFile } from "@/app/(auth)/utils/canDownloadFile";
+import { retrieveFile } from "@/app/(files)/operations/retrieveFile";
+import { UnexpectedErrorResponse } from "@/app/shared/errorHandling/UnexpectedErrorResponse";
+import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
-import { retrieveFile } from "@/app/(files)/operations/retrieveFile";
-import { canDownloadFile } from "@/app/(auth)/utils/canDownloadFile";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/authSetup";
 
 export async function GET(
   req: NextRequest,
@@ -26,10 +27,7 @@ export async function GET(
       );
     }
   } catch (_) {
-    return NextResponse.json(
-      { message: "An unexpected error ocurred!" },
-      { status: 500 }
-    );
+    return UnexpectedErrorResponse();
   }
 
   try {
@@ -52,9 +50,6 @@ export async function GET(
     if (error instanceof Error) {
       return NextResponse.json({ message: error.message }, { status: 500 });
     }
-    return NextResponse.json(
-      { message: "An unexpected error ocurred!" },
-      { status: 500 }
-    );
+    return UnexpectedErrorResponse();
   }
 }

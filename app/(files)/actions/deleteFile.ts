@@ -3,6 +3,7 @@
 import { getServerSession } from "next-auth";
 import { deleteFile } from "../operations/deleteFile";
 import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/authSetup";
+import { unexpectedErrorMessage } from "@/app/shared/errorHandling/UnexpectedErrorResponse";
 
 export const deleteFileAction = async (fileId: string) => {
   const session = await getServerSession(authOptions);
@@ -16,6 +17,6 @@ export const deleteFileAction = async (fileId: string) => {
     if (error instanceof Error) {
       return { error: error.message };
     }
-    return { error: "An unexpected error ocurred!" };
+    return { error: unexpectedErrorMessage };
   }
 };

@@ -1,11 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import Busboy from "busboy";
-import { Readable } from "stream";
-import type { ReadableStream } from "node:stream/web";
-import { database } from "@/app/db/database";
-import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/authSetup";
-import { fileStore, fileStoreStrategy } from "../../fileStoreStrategies";
+import Busboy from "busboy";
+import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
+import { ReadableStream } from "node:stream/web";
+import { Readable } from "stream";
+import { storeFile } from "../../operations/storeFile";
 
 export async function POST(req: NextRequest): Promise<Response> {
   const session = await getServerSession(authOptions);
@@ -39,26 +38,9 @@ export async function POST(req: NextRequest): Promise<Response> {
     busboy.on(
       "file",
       async (field: string, file: Readable, { filename, mimeType }) => {
-        const storeFile = async () => {
-          const { id } = await database.file.create({
-            data: {
-              name: filename,
-              type: mimeType,
-              storeStrategy: fileStoreStrategy,
-              userId: session.user.id,
-            },
-          });
-          const retrieveString = await fileStore.store(
-            file,
-            session.user.id,
-            filename
-          );
-          await database.file.update({
-            where: { id },
-            data: { retrieveString },
-          });
-        };
-        filesBeingUploaded.push(storeFile());
+        filesBeingUploaded.push(
+          storeFile(file, { filename, mimeType, userId: session.user.id })
+        );
       }
     );
 

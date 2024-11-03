@@ -4,27 +4,14 @@ import {
   fileStoreStrategyType,
 } from "../fileStoreStrategies";
 
-type DeleteArguments =
-  | {
-      fileId: string;
-      userId?: string;
-      allowDeleteWithoutUserId: true;
-    }
-  | {
-      fileId: string;
-      userId: string;
-      allowDeleteWithoutUserId?: false;
-    };
+interface DeleteArguments {
+  fileId: string;
+  userId: string;
+}
 
-export const deleteFile = async ({
-  fileId,
-  userId,
-  allowDeleteWithoutUserId,
-}: DeleteArguments) => {
+export const deleteFile = async ({ fileId, userId }: DeleteArguments) => {
   const file = await database.file.findFirst({
-    where: allowDeleteWithoutUserId
-      ? { id: fileId }
-      : { id: fileId, userId: userId },
+    where: { id: fileId, userId: userId },
   });
 
   if (!file) {

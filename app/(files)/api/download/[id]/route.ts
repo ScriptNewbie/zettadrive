@@ -1,51 +1,60 @@
-import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/authSetup";
-import { database } from "@/app/db/database";
-import {
-  fileStoreStrategies,
-  fileStoreStrategyType,
-} from "@/app/(files)/fileStoreStrategies";
-import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { Readable } from "stream";
+import { retrieveFile } from "@/app/(files)/operations/retrieveFile";
+import { canDownloadFile } from "@/app/(auth)/utils/canDownloadFile";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/authSetup";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id?: string } }
 ) {
-  const session = await getServerSession(authOptions);
-
-  const file = await database.file.findFirst({
-    where: { id: params.id },
-  });
-
-  const canSeeFile = file?.userId === session?.user?.id;
-
-  if (!file || !canSeeFile) {
-    return NextResponse.json({ message: "File not found" }, { status: 404 });
+  if (!params.id) {
+    return NextResponse.json({ message: "Specify file ID!" }, { status: 400 });
   }
 
-  if (!file.retrieveString) {
+  try {
+    const session = await getServerSession(authOptions);
+    const isAllowedToDownload = await canDownloadFile({
+      fileId: params.id,
+      userId: session?.user?.id,
+    });
+    if (!isAllowedToDownload) {
+      return NextResponse.json(
+        { message: "You don't have permission to download this file!" },
+        { status: 403 }
+      );
+    }
+  } catch (_) {
     return NextResponse.json(
-      { message: "Retrieve path for the file was not found" },
-      {
-        status: 404,
-      }
+      { message: "An unexpected error ocurred!" },
+      { status: 500 }
     );
   }
 
-  const fileStore =
-    fileStoreStrategies[file.storeStrategy as fileStoreStrategyType];
-  const { stream, length } = await fileStore.retrieve(file.retrieveString);
+  try {
+    const { stream, length, name, type } = await retrieveFile({
+      fileId: params.id,
+    });
 
-  const responseStream = Readable.toWeb(stream);
-  const headers = new Headers({
-    "content-disposition": `attachment; filename="${file.name}"`,
-    "content-type": file.type,
-  });
-  if (length) {
-    headers.set("content-length", length.toString());
+    const responseStream = Readable.toWeb(stream);
+    const headers = new Headers({
+      "content-disposition": `attachment; filename="${name}"`,
+      "content-type": type,
+    });
+    if (length) {
+      headers.set("content-length", length.toString());
+    }
+    return new NextResponse(responseStream as ReadableStream<Uint8Array>, {
+      headers,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      return NextResponse.json({ message: error.message }, { status: 500 });
+    }
+    return NextResponse.json(
+      { message: "An unexpected error ocurred!" },
+      { status: 500 }
+    );
   }
-  return new NextResponse(responseStream as ReadableStream<Uint8Array>, {
-    headers,
-  });
 }

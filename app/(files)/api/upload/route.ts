@@ -37,7 +37,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const busboy = Busboy({ headers: { "content-type": contentType } });
     busboy.on(
       "file",
-      async (field: string, file: Readable, { filename, mimeType }) => {
+      (field: string, file: Readable, { filename, mimeType }) => {
         filesBeingUploaded.push(
           storeFile(file, { filename, mimeType, userId: session.user.id })
         );

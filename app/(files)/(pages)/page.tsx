@@ -1,9 +1,10 @@
 import { getServerSession } from "next-auth";
-import UploadPage from "./files/UploadForm";
-import { authOptions } from "./(auth)/api/auth/[...nextauth]/authSetup";
+import UploadPage from "./molecules/UploadForm";
+import { authOptions } from "../../(auth)/api/auth/[...nextauth]/authSetup";
 import { redirect } from "next/navigation";
-import { database } from "./db/database";
-import { Box } from "@mantine/core";
+import { database } from "../../db/database";
+import { Box, Group } from "@mantine/core";
+import { DeleteButton } from "./atoms/DeleteButton";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -18,11 +19,12 @@ export default async function Home() {
   return (
     <Box>
       {files.map((file) => (
-        <div key={file.id}>
+        <Group gap="xs" key={file.id}>
           <a target="_blank" href={`/api/download/${file.id}`}>
             {file.name}
           </a>
-        </div>
+          <DeleteButton fileId={file.id} />
+        </Group>
       ))}
       <UploadPage />
     </Box>

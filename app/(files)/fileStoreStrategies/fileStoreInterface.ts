@@ -5,4 +5,5 @@ export interface FileStoreInterface {
   retrieve(
     retrieveString: string
   ): Promise<{ stream: Readable; length?: number }>;
+  delete(retrieveString: string): Promise<void>;
 }

@@ -46,4 +46,14 @@ export const diskFileStore: FileStoreInterface = {
       });
     });
   },
+  delete: (filePath: string) => {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        await fs.promises.unlink(filePath);
+        resolve();
+      } catch (error) {
+        reject(new Error("Error deleting file"));
+      }
+    });
+  },
 };

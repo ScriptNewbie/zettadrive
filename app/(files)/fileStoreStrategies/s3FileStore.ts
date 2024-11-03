@@ -1,5 +1,9 @@
 import { FileStoreInterface } from "./fileStoreInterface"; // Adjust the import path as necessary
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+import {
+  S3Client,
+  GetObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { Readable } from "stream";
 
@@ -76,5 +80,20 @@ export const s3FileStore: FileStoreInterface = {
         }
       }
     );
+  },
+  delete: (retrieveString: string) => {
+    return new Promise<void>(async (resolve, reject) => {
+      try {
+        const params = {
+          Bucket: process.env.S3_BUCKET_NAME!,
+          Key: retrieveString,
+        };
+
+        await s3Client.send(new DeleteObjectCommand(params));
+        resolve();
+      } catch (error) {
+        reject(new Error("Error deleting file from S3"));
+      }
+    });
   },
 };

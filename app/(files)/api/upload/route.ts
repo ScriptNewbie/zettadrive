@@ -6,6 +6,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ReadableStream } from "node:stream/web";
 import { Readable } from "stream";
 import { storeFile } from "../../operations/storeFile";
+import { FileError } from "../../errorHandling/FileError";
 
 export async function POST(req: NextRequest): Promise<Response> {
   const session = await getServerSession(authOptions);
@@ -49,7 +50,15 @@ export async function POST(req: NextRequest): Promise<Response> {
       try {
         await Promise.all(filesBeingUploaded);
         resolve(NextResponse.json({ message: "success" }));
-      } catch (_) {
+      } catch (error) {
+        if (error instanceof FileError) {
+          resolve(
+            NextResponse.json(
+              { message: error.message },
+              { status: error.httpStatus }
+            )
+          );
+        }
         resolve(UnexpectedErrorResponse());
       }
     });

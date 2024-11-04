@@ -3,6 +3,7 @@ import {
   fileStoreStrategies,
   fileStoreStrategyType,
 } from "../fileStoreStrategies";
+import { FileError } from "../errorHandling/FileError";
 
 export const retrieveFile = async ({ fileId }: { fileId: string }) => {
   const file = await database.file.findFirst({
@@ -10,11 +11,11 @@ export const retrieveFile = async ({ fileId }: { fileId: string }) => {
   });
 
   if (!file) {
-    throw new Error("File not found");
+    throw new FileError("File not found", 404);
   }
 
   if (!file.retrieveString) {
-    throw new Error("Retrieve path for the file was not found");
+    throw new FileError("Retrieve path for the file was not found", 500);
   }
 
   const fileStore =

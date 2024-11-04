@@ -1,5 +1,6 @@
 import { authOptions } from "@/app/(auth)/api/auth/[...nextauth]/authSetup";
 import { canDownloadFile } from "@/app/(auth)/utils/canDownloadFile";
+import { FileError } from "@/app/(files)/errorHandling/FileError";
 import { retrieveFile } from "@/app/(files)/operations/retrieveFile";
 import { UnexpectedErrorResponse } from "@/app/shared/errorHandling/UnexpectedErrorResponse";
 import { getServerSession } from "next-auth";
@@ -47,8 +48,11 @@ export async function GET(
       headers,
     });
   } catch (error) {
-    if (error instanceof Error) {
-      return NextResponse.json({ message: error.message }, { status: 500 });
+    if (error instanceof FileError) {
+      return NextResponse.json(
+        { message: error.message },
+        { status: error.httpStatus }
+      );
     }
     return UnexpectedErrorResponse();
   }

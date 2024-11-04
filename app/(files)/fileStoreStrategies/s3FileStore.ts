@@ -6,6 +6,7 @@ import {
 } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import { Readable } from "stream";
+import { FileError } from "../errorHandling/FileError";
 
 const PART_SIZE = 5 * 1024 * 1024;
 const QUEUE_SIZE = 4;
@@ -44,8 +45,8 @@ export const s3FileStore: FileStoreInterface = {
 
         await upload.done();
         resolve(key);
-      } catch (error) {
-        reject(new Error("Error uploading file to S3"));
+      } catch (_) {
+        reject(new FileError("Error uploading file to S3", 500));
       }
     });
   },
@@ -73,10 +74,10 @@ export const s3FileStore: FileStoreInterface = {
               length: response.ContentLength || 0,
             });
           } else {
-            reject(new Error("No data received from S3 getObject"));
+            reject(new FileError("No data received from S3 getObject", 500));
           }
         } catch (_) {
-          reject(new Error("Error retrieving file from S3"));
+          reject(new FileError("Error retrieving file from S3", 500));
         }
       }
     );
@@ -91,8 +92,8 @@ export const s3FileStore: FileStoreInterface = {
 
         await s3Client.send(new DeleteObjectCommand(params));
         resolve();
-      } catch (error) {
-        reject(new Error("Error deleting file from S3"));
+      } catch (_) {
+        reject(new FileError("Error deleting file from S3", 500));
       }
     });
   },

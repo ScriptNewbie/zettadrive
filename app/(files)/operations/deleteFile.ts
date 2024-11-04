@@ -3,6 +3,7 @@ import {
   fileStoreStrategies,
   fileStoreStrategyType,
 } from "../fileStoreStrategies";
+import { FileError } from "../errorHandling/FileError";
 
 interface DeleteArguments {
   fileId: string;
@@ -15,7 +16,7 @@ export const deleteFile = async ({ fileId, userId }: DeleteArguments) => {
   });
 
   if (!file) {
-    throw new Error("File not found");
+    throw new FileError("File not found", 404);
   }
 
   if (!file.retrieveString) {

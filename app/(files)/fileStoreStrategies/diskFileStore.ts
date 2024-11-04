@@ -2,6 +2,7 @@ import { FileStoreInterface } from "./fileStoreInterface";
 import * as fs from "fs";
 import path from "path";
 import { Readable } from "stream";
+import { FileError } from "../errorHandling/FileError";
 
 export const diskFileStore: FileStoreInterface = {
   store: (fileStream: Readable, storeName: string, fileName: string) => {
@@ -24,11 +25,11 @@ export const diskFileStore: FileStoreInterface = {
 
         writeStream.on("error", (error) => {
           console.error("Error writing file:", error);
-          reject(new Error("Error writing file"));
+          reject(new FileError("Error writing file", 500));
         });
       } catch (error) {
         console.error("Error in store method:", error);
-        reject(new Error("Error storing file"));
+        reject(new FileError("Error storing file", 500));
       }
     });
   },
@@ -38,7 +39,7 @@ export const diskFileStore: FileStoreInterface = {
 
       fileReadStream.on("error", (error) => {
         console.error("Error reading file:", error);
-        reject(new Error("File not found or cannot be read"));
+        reject(new FileError("File not found or cannot be read", 404));
       });
 
       fileReadStream.on("open", () => {
@@ -51,8 +52,8 @@ export const diskFileStore: FileStoreInterface = {
       try {
         await fs.promises.unlink(filePath);
         resolve();
-      } catch (error) {
-        reject(new Error("Error deleting file"));
+      } catch (_) {
+        reject(new FileError("Error deleting file", 500));
       }
     });
   },

@@ -10,8 +10,8 @@
     "migrate": "prisma migrate"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.677.0",
-    "@aws-sdk/lib-storage": "^3.679.0",
+    "@aws-sdk/client-s3": "3.894.0",
+    "@aws-sdk/lib-storage": "3.894.0",
     "@mantine/core": "^7.13.3",
     "@mantine/dropzone": "^7.13.3",
     "@mantine/hooks": "^7.13.3",
@@ -19,8 +19,8 @@
     "@prisma/client": "^5.21.1",
     "@tabler/icons-react": "^3.19.0",
     "busboy": "^1.6.0",
-    "next": "14.2.15",
-    "next-auth": "^4.24.8",
+    "next": "15.5.21",
+    "next-auth": "4.24.15",
     "react": "^18",
     "react-dom": "^18"
   },
@@ -30,11 +30,18 @@
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "eslint": "^8",
-    "eslint-config-next": "14.2.15",
-    "postcss": "^8.4.47",
+    "eslint-config-next": "15.5.21",
+    "postcss": "8.5.23",
     "postcss-preset-mantine": "^1.17.0",
     "postcss-simple-vars": "^7.0.1",
     "prisma": "^5.21.1",
     "typescript": "^5"
+  },
+  "overrides": {
+    "brace-expansion@1": "1.1.18",
+    "postcss": "8.5.23",
+    "sharp": "0.35.0",
+    "fast-xml-parser": "5.7.0",
+    "uuid": "11.1.1"
   }
 }

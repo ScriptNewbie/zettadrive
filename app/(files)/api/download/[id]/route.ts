@@ -9,16 +9,17 @@ import { Readable } from "stream";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id?: string } }
+  { params }: { params: Promise<{ id?: string }> }
 ) {
-  if (!params.id) {
+  const { id } = await params;
+  if (!id) {
     return NextResponse.json({ message: "Specify file ID!" }, { status: 400 });
   }
 
   try {
     const session = await getServerSession(authOptions);
     const isAllowedToDownload = await canDownloadFile({
-      fileId: params.id,
+      fileId: id,
       userId: session?.user?.id,
     });
     if (!isAllowedToDownload) {
@@ -33,7 +34,7 @@ export async function GET(
 
   try {
     const { stream, length, name, type } = await retrieveFile({
-      fileId: params.id,
+      fileId: id,
     });
 
     const responseStream = Readable.toWeb(stream);
